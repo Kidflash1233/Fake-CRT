@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro CRT Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div class="crt-screen crt-scanlines crt-flicker">
+        <div class="terminal crt-colorsep" id="terminal">
+            <div class="terminal-output" id="output"></div>
+            <div class="input-line">
+                <span class="prompt">guest@terminal:~$</span>
+                <span class="input-display" id="input-display"></span>
+                <span class="cursor" id="cursor"></span>
+            </div>
+        </div>
+        <div class="overlay">TERM-1</div>
+        <textarea id="input" class="terminal-input" autofocus autocomplete="off" spellcheck="false"></textarea>
+    </div>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
