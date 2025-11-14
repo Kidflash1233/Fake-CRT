@@ -310,7 +310,7 @@
 
         .ascii-art {
             color: #00ddff;
-            font-size: 14px;
+            font-size: clamp(7px, 1.2vw, 12px);
             line-height: 1.2;
             margin: 10px 0;
             animation: textShadow 0.01s infinite alternate;
@@ -354,10 +354,6 @@
             font-variant-ligatures: none;
             letter-spacing: 0;
             line-height: 1.1;
-        }
-
-        .ascii-art.welcome-text {
-            font-size: 12px;
         }
 
         /* Neofetch styling */

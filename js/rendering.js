@@ -54,12 +54,12 @@ export function typeText(text, element, speed = 30) {
                 line.className = 'output-line';
 
                 // Apply special styling for certain lines
-                if (lines[index].includes('Welcome') || lines[index].includes('CRT Terminal')) {
+                if (looksLikeAsciiArt(lines[index])) {
+                    line.className += ' ascii-art';
+                } else if (lines[index].includes('Welcome') || lines[index].includes('CRT Terminal')) {
                     line.className += ' welcome-text';
                 } else if (lines[index].includes('Type') || lines[index].includes('help')) {
                     line.className += ' info-text';
-                } else if (looksLikeAsciiArt(lines[index])) {
-                    line.className += ' ascii-art';
                 }
 
                 line.textContent = lines[index];
