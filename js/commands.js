@@ -106,7 +106,7 @@ Have fun exploring the terminal.
     matrix: () => {
         // Thin wrapper - calls the effect implementation
         createMatrixEffect();
-        return 'Matrix effect started. Press any key to exit.';
+        return 'Matrix effect started. Press any key or tap to exit.';
     },
 
     uptime: () => {

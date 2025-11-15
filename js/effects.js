@@ -168,14 +168,18 @@ export function createMatrixEffect() {
     function cleanup() {
         clearInterval(intervalId);
         document.removeEventListener('keydown', exitHandler, { capture: true });
+        document.removeEventListener('touchstart', exitHandler, { capture: true });
+        document.removeEventListener('click', exitHandler, { capture: true });
         terminalElement.style.opacity = '1'; // Restore visibility
         if (overlay.parentNode) {
             overlay.parentNode.removeChild(overlay);
         }
     }
 
-    // Exit handler for keypress
+    // Exit handler for keypress/touch/click
     function exitHandler(e) {
+        e.preventDefault();
+        e.stopPropagation();
         cleanup();
     }
 
@@ -188,9 +192,11 @@ export function createMatrixEffect() {
         cleanup();
     }, config.duration);
 
-    // Exit on any keypress - use capture phase to intercept BEFORE terminal input
+    // Exit on any keypress, touch, or click - use capture phase to intercept BEFORE terminal input
     document.addEventListener('keydown', exitHandler, { capture: true });
-    console.log('⌨️ Keydown listener added (capture phase)');
+    document.addEventListener('touchstart', exitHandler, { capture: true });
+    document.addEventListener('click', exitHandler, { capture: true });
+    console.log('⌨️ Keydown, touch, and click listeners added (capture phase)');
 
     console.log('✅ Matrix effect fully initialized!');
 }
