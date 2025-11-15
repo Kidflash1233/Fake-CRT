@@ -135,12 +135,16 @@ export function createMatrixEffect() {
     // Safety check
     if (canvas.width === 0 || canvas.height === 0) {
         console.error('❌ Canvas has zero dimensions! Aborting.');
+        alert('Matrix Error: Canvas has zero dimensions!\nCanvas: ' + canvas.width + 'x' + canvas.height + '\nOverlay: ' + overlayWidth + 'x' + overlayHeight);
         terminalElement.style.opacity = '1';
         if (overlay.parentNode) {
             overlay.parentNode.removeChild(overlay);
         }
         return;
     }
+
+    // Add mobile debug info
+    debugText.textContent = 'Canvas: ' + canvas.width + 'x' + canvas.height + ' - Starting...';
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
