@@ -42,6 +42,7 @@ export function createMatrixEffect() {
     // ============================================
     // CONFIGURATION - Change these to test different styles!
     // ============================================
+    const DEBUG_MODE = false;     // Set to true to show debug overlay text
     const config = {
         scope: 'fullpage',        // 'fullpage' or 'terminal'
         background: 'dim',        // 'hide', 'dim', or 'visible'
@@ -93,18 +94,21 @@ export function createMatrixEffect() {
         terminalElement.style.opacity = '1';
     }
 
-    // Add debug text to overlay (temporary)
-    const debugText = document.createElement('div');
-    debugText.style.position = 'absolute';
-    debugText.style.top = '50%';
-    debugText.style.left = '50%';
-    debugText.style.transform = 'translate(-50%, -50%)';
-    debugText.style.color = '#00ff00';
-    debugText.style.fontSize = '20px';
-    debugText.style.fontFamily = 'monospace';
-    debugText.style.zIndex = '10000';
-    debugText.textContent = 'MATRIX OVERLAY VISIBLE - Loading...';
-    overlay.appendChild(debugText);
+    // Debug overlay text (only shown when DEBUG_MODE = true)
+    let debugText = null;
+    if (DEBUG_MODE) {
+        debugText = document.createElement('div');
+        debugText.style.position = 'absolute';
+        debugText.style.top = '50%';
+        debugText.style.left = '50%';
+        debugText.style.transform = 'translate(-50%, -50%)';
+        debugText.style.color = '#00ff00';
+        debugText.style.fontSize = '20px';
+        debugText.style.fontFamily = 'monospace';
+        debugText.style.zIndex = '10000';
+        debugText.textContent = 'MATRIX OVERLAY VISIBLE - Loading...';
+        overlay.appendChild(debugText);
+    }
 
     // Create canvas for Matrix effect
     const canvas = document.createElement('canvas');
@@ -135,7 +139,9 @@ export function createMatrixEffect() {
     // Safety check
     if (canvas.width === 0 || canvas.height === 0) {
         console.error('❌ Canvas has zero dimensions! Aborting.');
-        alert('Matrix Error: Canvas has zero dimensions!\nCanvas: ' + canvas.width + 'x' + canvas.height + '\nOverlay: ' + overlayWidth + 'x' + overlayHeight);
+        if (DEBUG_MODE) {
+            alert('Matrix Error: Canvas has zero dimensions!\nCanvas: ' + canvas.width + 'x' + canvas.height + '\nOverlay: ' + overlayWidth + 'x' + overlayHeight);
+        }
         terminalElement.style.opacity = '1';
         if (overlay.parentNode) {
             overlay.parentNode.removeChild(overlay);
@@ -143,8 +149,10 @@ export function createMatrixEffect() {
         return;
     }
 
-    // Add mobile debug info
-    debugText.textContent = 'Canvas: ' + canvas.width + 'x' + canvas.height + ' - Starting...';
+    // Update debug text with canvas info (only in DEBUG_MODE)
+    if (DEBUG_MODE && debugText) {
+        debugText.textContent = 'Canvas: ' + canvas.width + 'x' + canvas.height + ' - Starting...';
+    }
 
     // Track animation frames for debugging
     let frameCount = 0;
@@ -176,8 +184,8 @@ export function createMatrixEffect() {
     function draw() {
         frameCount++;
 
-        // Update debug text every 30 frames
-        if (frameCount % 30 === 0 && debugText.parentNode) {
+        // Update debug text every 30 frames (only in DEBUG_MODE)
+        if (DEBUG_MODE && debugText && frameCount % 30 === 0 && debugText.parentNode) {
             debugText.textContent = 'Frames: ' + frameCount + ' | Columns: ' + columns;
         }
 
@@ -256,17 +264,19 @@ export function createMatrixEffect() {
     setTimeout(() => {
         exitHandlersActive = true;
         console.log('✅ Exit handlers now active');
-        if (debugText.parentNode) {
+        if (DEBUG_MODE && debugText && debugText.parentNode) {
             debugText.textContent = 'TAP OR PRESS KEY TO EXIT';
         }
     }, 1000);
 
-    // Hide debug text after 4 seconds
-    setTimeout(() => {
-        if (debugText.parentNode) {
-            debugText.remove();
-        }
-    }, 4000);
+    // Hide debug text after 4 seconds (only in DEBUG_MODE)
+    if (DEBUG_MODE) {
+        setTimeout(() => {
+            if (debugText && debugText.parentNode) {
+                debugText.remove();
+            }
+        }, 4000);
+    }
 
     // Auto-stop after duration
     setTimeout(() => {
