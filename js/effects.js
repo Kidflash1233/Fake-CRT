@@ -61,6 +61,263 @@ export function randomGlitch() {
     checkGlitch();
 }
 
+// Boot sequence overlay that mimics a BIOS/OS boot
+export function showBootSequence() {
+    return new Promise((resolve) => {
+        // Fullscreen overlay shell
+        const root = document.createElement('div');
+        root.id = 'boot-overlay';
+        root.style.position = 'fixed';
+        root.style.inset = '0';
+        root.style.zIndex = '99999';
+        root.style.background = '#000';
+
+        // Build a proper CRT screen with same classes as the app
+        const screen = document.createElement('div');
+        screen.className = 'crt-screen crt-scanlines crt-flicker';
+        screen.style.width = '100vw';
+        screen.style.height = '100vh';
+        const term = document.createElement('div');
+        term.className = 'terminal crt-colorsep';
+        // Use same font/color/animations by leveraging .terminal + info-text
+        const pre = document.createElement('pre');
+        pre.className = 'info-text';
+        pre.style.margin = '0';
+        pre.style.whiteSpace = 'pre-wrap';
+        term.appendChild(pre);
+        screen.appendChild(term);
+        const badge = document.createElement('div');
+        badge.className = 'overlay';
+        badge.textContent = 'TERM-1';
+        screen.appendChild(badge);
+        root.appendChild(screen);
+        // Hide until fonts are ready to avoid flash of wrong size/font
+        root.style.visibility = 'hidden';
+        document.body.appendChild(root);
+
+        const lines = [
+            'RAVON.DEV BIOS v1.00',
+            'Copyright (C) Ravon Industries',
+            '',
+            'CPU: Retro-CRT x86_64           Memory: 65536 KB  [OK]',
+            'Devices: KBD [OK]   CRT [OK]    NET [OK]',
+            'Boot Order: CRT-0  MATRIX-1  NET-2',
+            '',
+            'Calibrating scanlines.................... [OK]',
+            'Warming phosphor glow.................... [OK]',
+            'Applying chromatic aberration............ [OK]',
+            'Loading jokes database................... [3 warnings]',
+            'Checking Ben&Jerry supply................ [ABUNDANT]',
+            'Consulting white rabbit.................. [BUSY]',
+            'Charging flux capacitor.................. [OK]',
+            'Tuning RGB split shaders................. [OK]',
+            'Enabling Tailscale magic................. [NAT TRAVERSAL OK]',
+            'Spinning Docker daemons.................. [HAPPY WHALES]',
+            'Proxmox handshake........................ [HIGH FIVE]',
+            'Organizing cables........................ [IT\'S A MESS]',
+            'Counting stars in the Matrix............. [LOTS]',
+            'Mounting /home/guest..................... [OK]',
+            'Starting snake driver.................... [COILS READY]',
+            'Feeding cats............................. [PURR]',
+            'Encrypting pizza......................... [DELICIOUS]',
+            'Reassuring servers....................... [YOU GOT THIS]',
+            'One more thing........................... [JUST KIDDING]',
+            '',
+            'Starting RavonOS terminal................ [OK]',
+            'Press ESC to skip',
+        ];
+
+        let idx = 0;
+        let cancelled = false;
+        function cleanup() {
+            document.removeEventListener('keydown', onKey, { capture: true });
+            document.removeEventListener('click', onKey, { capture: true });
+            document.removeEventListener('touchstart', onKey, { capture: true });
+            if (root.parentNode) root.parentNode.removeChild(root);
+        }
+        function onKey(e) {
+            cancelled = true;
+            cleanup();
+            resolve();
+        }
+        document.addEventListener('keydown', onKey, { capture: true });
+        document.addEventListener('click', onKey, { capture: true });
+        document.addEventListener('touchstart', onKey, { capture: true });
+
+        const baseDelay = 160; // baseline per line
+        function writeNext() {
+            if (cancelled) return;
+            if (idx < lines.length) {
+                pre.textContent += lines[idx] + '\n';
+                idx++;
+                // Add a little random jitter so it feels more organic
+                const jitter = 80 + Math.floor(Math.random() * 220); // 80..300ms
+                setTimeout(writeNext, baseDelay + jitter);
+            } else {
+                setTimeout(() => {
+                    cleanup();
+                    resolve();
+                }, 1800);
+            }
+        }
+        const start = () => { root.style.visibility = 'visible'; writeNext(); };
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(start).catch(start);
+        } else {
+            start();
+        }
+    });
+}
+
+// Simple image viewer overlay; closes on any key, click, or tap
+export function openImageViewer(src) {
+    const overlay = document.createElement('div');
+    overlay.id = 'image-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(0,0,0,0.8)';
+    overlay.style.zIndex = '99998';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.className = 'crt-scanlines crt-flicker crt-colorsep';
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'image';
+    img.style.maxWidth = '90vw';
+    img.style.maxHeight = '80vh';
+    img.style.boxShadow = '0 0 20px rgba(255,255,255,0.3)';
+    img.style.borderRadius = '6px';
+    overlay.appendChild(img);
+
+    function cleanup() {
+        document.removeEventListener('keydown', onKey, { capture: true });
+        document.removeEventListener('click', onClick, { capture: true });
+        document.removeEventListener('touchstart', onClick, { capture: true });
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+    function onKey() { cleanup(); }
+    function onClick() { cleanup(); }
+
+    document.addEventListener('keydown', onKey, { capture: true });
+    document.addEventListener('click', onClick, { capture: true });
+    document.addEventListener('touchstart', onClick, { capture: true });
+    document.body.appendChild(overlay);
+}
+
+// Family slideshow overlay
+export function startSlideshow(items, options = {}) {
+    const settings = Object.assign({ interval: 3000 }, options);
+    if (!items || !items.length) return;
+
+    let idx = 0;
+    let playing = true;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'slideshow-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.background = 'rgba(0,0,0,0.85)';
+    overlay.style.zIndex = '99998';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.className = 'crt-scanlines crt-flicker crt-colorsep';
+
+    const img = document.createElement('img');
+    img.style.maxWidth = '92vw';
+    img.style.maxHeight = '82vh';
+    img.style.boxShadow = '0 0 20px rgba(255,255,255,0.25)';
+    img.style.borderRadius = '6px';
+    img.alt = 'slideshow image';
+    overlay.appendChild(img);
+
+    // Controls hint (bottom-right)
+    const controls = document.createElement('div');
+    controls.className = 'overlay';
+    controls.style.right = '30px';
+    controls.style.left = 'auto';
+    controls.style.bottom = '20px';
+    controls.style.fontSize = '18px';
+    controls.textContent = 'Space: pause/play  ←/→: prev/next  Esc: close';
+    overlay.appendChild(controls);
+
+    // Caption (bottom-left)
+    const captionBox = document.createElement('div');
+    captionBox.className = 'overlay';
+    captionBox.style.left = '30px';
+    captionBox.style.right = 'auto';
+    captionBox.style.bottom = '20px';
+    captionBox.style.fontSize = '22px';
+    captionBox.style.color = '#66ccff';
+    overlay.appendChild(captionBox);
+
+    const images = items;
+
+    function normalizeItem(entry) {
+        if (typeof entry === 'string') return { src: entry, caption: '' };
+        if (entry && typeof entry === 'object') return { src: entry.src, caption: entry.caption || '' };
+        return { src: '', caption: '' };
+    }
+
+    function show(i) {
+        idx = (i + images.length) % images.length;
+        const it = normalizeItem(images[idx]);
+        img.src = it.src;
+        captionBox.textContent = it.caption || '';
+        img.onload = () => {};
+    }
+
+    function cleanup() {
+        stop();
+        document.removeEventListener('keydown', onKey, { capture: true });
+        document.removeEventListener('click', onClick, { capture: true });
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    function onKey(e) {
+        if ([' ', 'ArrowLeft', 'ArrowRight', 'Escape'].includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (e.key === ' ') {
+            playing = !playing;
+            if (playing) start(); else stop();
+        } else if (e.key === 'ArrowLeft') {
+            show(idx - 1);
+        } else if (e.key === 'ArrowRight') {
+            show(idx + 1);
+        } else if (e.key === 'Escape') {
+            cleanup();
+        }
+    }
+
+    function onClick() {
+        // Single click toggles play/pause
+        playing = !playing;
+        if (playing) start(); else stop();
+    }
+
+    let timer = null;
+    function start() {
+        clearInterval(timer);
+        timer = setInterval(() => show(idx + 1), settings.interval);
+    }
+    function stop() { clearInterval(timer); timer = null; }
+
+    document.addEventListener('keydown', onKey, { capture: true });
+    document.addEventListener('click', onClick, { capture: true });
+    document.body.appendChild(overlay);
+    show(idx);
+    start();
+}
 // Matrix digital rain effect
 export function createMatrixEffect() {
     console.log('🎬 Matrix effect started!');

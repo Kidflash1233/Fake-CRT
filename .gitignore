@@ -1,0 +1,18 @@
+# Ignore local server artifacts and logs
+.server/
+server.pid
+*.log
+
+# Ignore personal or large assets not meant for deployment
+img/family/
+
+# Common OS/editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Future env/config files
+.env
+.env.*

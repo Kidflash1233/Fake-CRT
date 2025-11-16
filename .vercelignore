@@ -1,0 +1,17 @@
+# Exclude local-only artifacts from deployments
+.server/
+server.pid
+**/*.log
+
+# Exclude personal media not intended for the public site
+img/family/
+
+# Exclude repo metadata and editor configs from upload
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Safety: ignore environment files if ever added
+.env
+.env.*

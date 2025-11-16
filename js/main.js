@@ -2,7 +2,7 @@
 // ==========================
 // Imports and coordinates all modules
 
-import { randomGlitch } from './effects.js';
+import { randomGlitch, showBootSequence } from './effects.js';
 import {
     setTerminalElements,
     updateCursorPosition as updateCursorPos,
@@ -18,7 +18,18 @@ let initialized = false;
 // Expose state for commands module (use getter for live reference)
 window.terminalState = {
     get commandHistory() { return commandHistory; },
-    setHistoryIndex: (index) => { historyIndex = index; }
+    setHistoryIndex: (index) => { historyIndex = index; },
+    interactiveHandler: null,
+    setInteractiveHandler(fn) { this.interactiveHandler = fn || null; },
+    isInteractive() { return typeof this.interactiveHandler === 'function'; },
+    cwd: '/home/guest',
+    setCwd: (path) => { window.terminalState.cwd = path || '/'; updatePrompt(); },
+    getPromptString: () => {
+        const cwd = window.terminalState.cwd || '/';
+        const home = '/home/guest';
+        const shown = cwd === home ? '~' : cwd;
+        return `guest@terminal:${shown}$`;
+    }
 };
 
 // Initialize terminal
@@ -49,16 +60,48 @@ function init() {
         updateCursorPos(input, inputDisplay, cursor);
     }
 
+    function updatePrompt() {
+        if (prompt) {
+            prompt.textContent = window.terminalState.getPromptString();
+        }
+    }
+    // Make updatePrompt available to terminalState methods
+    window.updatePrompt = updatePrompt;
+
     // Update display on input
     input.addEventListener('input', updateCursorPosition);
 
     // Handle input - prevent newlines in textarea
     input.addEventListener('keydown', (e) => {
+        // Handle special exits for interactive flows (e.g., nano)
+        if (window.terminalState.isInteractive()) {
+            const handler = window.terminalState.interactiveHandler;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (handler) handler(':esc', input, updateCursorPosition);
+                return;
+            }
+            if (e.ctrlKey && (e.key === 'x' || e.key === 'X')) {
+                e.preventDefault();
+                if (handler) handler(':ctrlx', input, updateCursorPosition);
+                return;
+            }
+        }
         if (e.key === 'Enter') {
             e.preventDefault();
-            processCommand(input.value.trim(), input, updateCursorPosition);
+            // Route to interactive handler if active
+            if (window.terminalState.isInteractive()) {
+                const handler = window.terminalState.interactiveHandler;
+                if (handler) handler(input.value.trim(), input, updateCursorPosition);
+            } else {
+                processCommand(input.value.trim(), input, updateCursorPosition);
+            }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
+            if (window.terminalState.isInteractive()) {
+                // Ignore history navigation during interactive flows
+                return;
+            }
             if (historyIndex < commandHistory.length - 1) {
                 historyIndex++;
                 input.value = commandHistory[historyIndex];
@@ -66,6 +109,10 @@ function init() {
             }
         } else if (e.key === 'ArrowDown') {
             e.preventDefault();
+            if (window.terminalState.isInteractive()) {
+                // Ignore history navigation during interactive flows
+                return;
+            }
             if (historyIndex > 0) {
                 historyIndex--;
                 input.value = commandHistory[historyIndex];
@@ -77,11 +124,14 @@ function init() {
             }
         } else if (e.key === 'Tab') {
             e.preventDefault();
-            const partial = input.value.toLowerCase();
-            const matches = Object.keys(commands).filter(cmd => cmd.startsWith(partial));
-            if (matches.length === 1) {
-                input.value = matches[0];
-                updateCursorPosition();
+            // Disable autocompletion inside interactive sessions
+            if (!window.terminalState.isInteractive()) {
+                const partial = input.value.toLowerCase();
+                const matches = Object.keys(commands).filter(cmd => cmd.startsWith(partial));
+                if (matches.length === 1) {
+                    input.value = matches[0];
+                    updateCursorPosition();
+                }
             }
         }
     });
@@ -108,17 +158,26 @@ function init() {
         input.focus();
     });
 
-    // Render welcome message
+    // Boot sequence, then render welcome
     input.disabled = true;
-    renderWelcome();
-    input.disabled = false;
-    input.focus();
+    updatePrompt();
+    showBootSequence().then(() => {
+        renderWelcome();
+        // Start glitch effect on ASCII art now that it exists
+        randomGlitch();
+        input.disabled = false;
+        input.focus();
+    }).catch(() => {
+        renderWelcome();
+        randomGlitch();
+        input.disabled = false;
+        input.focus();
+    });
 
     // Wait a moment for DOM to fully render before positioning cursor
     setTimeout(() => {
         updateCursorPosition();
-        // Start glitch effect on ASCII art
-        randomGlitch();
+        updatePrompt();
     }, 100);
 }
 

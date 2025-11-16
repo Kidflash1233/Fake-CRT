@@ -53,3 +53,16 @@ Huge thanks to them for sharing these resources, they saved me a lot of time and
 - https://github.com/HairyDuck/terminal
 - https://codepen.io/njbair/pen/ZVPomJ
 - https://codepen.io/meduzen/pen/zxbwRV 
+
+## Deployment & Security (No Secrets in Repo)
+
+- This is a static site. There are no API keys required to run it.
+- Do not hardcode credentials or tokens anywhere in `js/` or `index.html`.
+- If you ever add backend calls, keep secrets in your platform env (e.g., Vercel Project Settings → Environment Variables) and never commit them.
+- Local-only artifacts are ignored via `.gitignore` and excluded from deployments via `.vercelignore` (e.g., `.server/`, `server.pid`, `*.log`, and `img/family/`).
+- Contact email lives in `js/config.js` as `CONTACT_EMAIL`. It’s public by design; change or remove it if you prefer not to expose an address.
+
+### Verify env on Vercel
+
+- A serverless health check is available at `/api/health`.
+- It returns JSON `{ ok: true, configured: <boolean> }` without revealing the key.

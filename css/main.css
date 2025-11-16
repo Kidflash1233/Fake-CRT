@@ -337,6 +337,33 @@
             text-shadow: 0 0 10px rgba(255, 51, 51, 0.8);
         }
 
+        .success-text {
+            color: #66ff99;
+            text-shadow: 0 0 10px rgba(102, 255, 153, 0.8);
+            animation: textShadow 0.02s infinite alternate;
+        }
+
+        .question-text {
+            color: #00ffaa;
+            animation: textShadow 0.01s infinite alternate;
+        }
+
+        .muted-text {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .red-text {
+            color: #ff4d4d;
+            text-shadow: 0 0 8px rgba(255, 77, 77, 0.8);
+            animation: textShadow 0.015s infinite alternate;
+        }
+
+        .blue-text {
+            color: #66aaff;
+            text-shadow: 0 0 8px rgba(102,170,255,0.8);
+            animation: textShadow 0.015s infinite alternate;
+        }
+
         .ascii-art {
             font-family: 'JGS', 'DejaVu Sans Mono', 'Cascadia Mono', 'Liberation Mono', 'Noto Sans Mono', 'Roboto Mono', 'Courier New', monospace;
         }
@@ -514,4 +541,16 @@
             opacity: 0.75;
             pointer-events: none;
             animation: scanline 6s linear infinite;
+        }
+
+        /* Boot overlay specific tweaks */
+        #boot-overlay pre {
+            text-shadow: 0 0 6px rgba(0,255,0,0.4);
+        }
+
+        /* Make boot text slightly smaller than main terminal */
+        #boot-overlay .terminal {
+            font-size: 16px;
+            line-height: 1.5;
+            font-style: italic;
         }

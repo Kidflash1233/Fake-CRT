@@ -127,6 +127,25 @@ export function addOutput(text, className = '') {
     scrollToBottom();
 }
 
+// Append a single output line and return the element (for dynamic updates)
+export function appendLine(text, className = '') {
+    const div = document.createElement('div');
+    div.className = ('output-line ' + className).trim();
+    div.textContent = text;
+    output.appendChild(div);
+    limitOutputSize();
+    scrollToBottom();
+    return div;
+}
+
+// Append an arbitrary node to output and keep terminal scrolled
+export function appendNode(node) {
+    output.appendChild(node);
+    limitOutputSize();
+    scrollToBottom();
+    return node;
+}
+
 // Registry for structured command renderers
 const structuredRenderers = {
     neofetch: (data) => renderNeofetch(data)
@@ -177,7 +196,20 @@ function renderNeofetch(data) {
 
         const dd = document.createElement('dd');
         dd.className = 'neofetch-value';
-        dd.textContent = item.value;
+
+        // Clickable link if value looks like a URL or if item.url provided
+        const val = item.value;
+        if (item.url || (typeof val === 'string' && /^https?:\/\//i.test(val))) {
+            const a = document.createElement('a');
+            a.href = item.url || val;
+            a.textContent = (typeof val === 'string') ? val : (item.text || item.url);
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.style.color = '#66ccff';
+            dd.appendChild(a);
+        } else {
+            dd.textContent = typeof val === 'string' ? val : String(val);
+        }
 
         dl.appendChild(dt);
         dl.appendChild(dd);
